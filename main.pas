@@ -217,6 +217,7 @@ begin
   //ShortDateFormat := 'yyyy-mm-dd';
   iRegs_Count := 0;
   wValue := '';
+  wValue := wValue + 'SELECT ' + SELF.oSL_Dest[self.iMasterIdx] + ' '#13;
   cField_Value := '';
 
   self.oQry_Dest.First;
@@ -244,12 +245,18 @@ begin
     end;
 
 
-    wValue := '';
 
     if (bFindDbf = True) then
-      self.oDbf_Orig.Edit
+    begin
+      self.oDbf_Orig.Edit;
+    end
     else
+    begin
+      wValue := wValue + 'APPEND BLANK ' + #13;
       self.oDbf_Orig.Insert;
+    end;
+
+    wValue := wValue + 'REPLACE ' + #13;
 
     for i := 0 to (self.oQry_Dest.FieldCount - 1) do
     begin
@@ -257,11 +264,12 @@ begin
       vValue := self.oQry_Dest.Fields[i].Value;
       sValue := self.oQry_Dest.Fields[i].AsString;
       iType := self.oQry_Dest.Fields[i].DataType;
-      if (cField <> 'autoin') then
+      if (LOWERCASE(TRIM(cField)) <> 'autoin') then
       begin
         if (self.oQry_Dest.Fields[i].IsNull = True) then
         begin
           self.oDbf_Orig.FieldByName(cField).Value := null;
+          wValue := wValue + cField + ' WITH .NULL.,' + #13;
         end
         else
         begin
@@ -271,35 +279,48 @@ begin
               cField_Value := '"1900/01/01"'
             else
             begin
-              self.oDbf_Orig.FieldByName(cField).AsString := formatdatetime('dd/mm/yyyy', self.oQry_Dest.Fields[i].AsDateTime);
+              cField_Value := formatdatetime('dd/mm/yyyy', self.oQry_Dest.Fields[i].AsDateTime);
+              self.oDbf_Orig.FieldByName(cField).AsString := cField_Value;
+              wValue := wValue + cField + ' WITH "' + cField_Value + '",' + #13;
               //self.oDbf_Orig.FieldByName(cField).AsDateTime := self.oQry_Dest.Fields[i].AsDateTime;
             end;
           end
           else if iType in [ftString, ftMemo, ftWideString] then
           begin
             self.oDbf_Orig.FieldByName(cField).AsString := self.oQry_Dest.Fields[i].AsString;
+            wValue := wValue + cField + ' WITH "' + self.oQry_Dest.Fields[i].AsString + '",' + #13;
           end
           else if iType in [ftFloat, ftCurrency] then
           begin
             self.oDbf_Orig.FieldByName(cField).AsFloat := self.oQry_Dest.Fields[i].AsFloat;
+            wValue := wValue + cField + ' WITH ' + formatfloat('####0.00', self.oQry_Dest.Fields[i].AsFloat) + ',' + #13;
           end
           else if iType in [ftUnknown] then
           begin
             self.oDbf_Orig.FieldByName(cField).Value := null;
+            wValue := wValue + cField + ' WITH .NULL.,' + #13;
           end
           else if iType in [ftInteger, ftSmallint, ftWord, ftLargeint] then
           begin
             self.oDbf_Orig.FieldByName(cField).Value := self.oQry_Dest.Fields[i].Value;
+            wValue := wValue + cField + ' WITH ' + formatfloat('####0', self.oQry_Dest.Fields[i].Value) + ',' + #13;
           end
           else
           begin
             self.oDbf_Orig.FieldByName(cField).AsString := self.oQry_Dest.Fields[i].AsString;
+            wValue := wValue + cField + ' WITH "' + self.oQry_Dest.Fields[i].AsString + '",' + #13;
           end;
         end;
         //self.oDbf_Orig.FieldByName(cField).AsString := cField_Value;
-        wValue := wValue + cField_Value + '|';
+        //wValue := wValue + cField + ' WITH "' + self.oQry_Dest.Fields[i].AsString + '",' + #13;
       end;
     end;
+
+    if (RightStr(trim(wValue), 1) = ',') then
+    begin
+      wValue := copy(trim(wValue), 1, length(trim(wValue)) - 1);
+    end;
+
     self.oLog.Lines.Insert(0, 'INSERTANDO:' + #10 + wValue + #10);
     self.oLog.Repaint;
     self.LogFile(wValue);
