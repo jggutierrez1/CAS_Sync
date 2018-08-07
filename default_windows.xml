@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CONFIG>
+  <Settings HeaderColor="536870912"/>
+  <MainConfig>
+    <Nodes ChildCount="1">
+      <Item1 Name="MainIDE" Type="CustomSite" ChildCount="1" WindowState="Maximized">
+        <Bounds Top="-8" Left="-8" Width="1366" Height="705">
+          <WorkArea>
+            <Rect Right="1366" Bottom="728"/>
+          </WorkArea>
+        </Bounds>
+        <Item1 Name="GlassDockSite5" Type="Layout" ChildCount="3" WindowState="Maximized">
+          <Bounds Top="96" Width="1366" Height="589" SplitterPos="92"/>
+          <Anchors Align="Bottom"/>
+          <Item1 Name="GlassDockSite6" Type="Pages" ChildCount="2" WindowState="Maximized">
+            <Bounds Width="1366" Height="487"/>
+            <Anchors Bottom="GlassDockSplitter3"/>
+            <Item1 Name="GlassDockSite1" Type="Layout" ChildCount="3" WindowState="Maximized">
+              <Bounds Width="1358" Height="459"/>
+              <Anchors Align="Client"/>
+              <Item1 Name="SourceNotebook" Type="Control" WindowState="Maximized">
+                <Bounds Left="234" Width="1124" Height="459"/>
+                <Anchors Left="GlassDockSplitter2"/>
+              </Item1>
+              <Item2 Name="GlassDockSplitter2" Type="SplitterVertical" WindowState="Maximized">
+                <Bounds Left="230" Width="4" Height="459"/>
+              </Item2>
+              <Item3 Name="ObjectInspectorDlg" Type="Control" WindowState="Maximized">
+                <Bounds Width="230" Height="459"/>
+                <Anchors Right="GlassDockSplitter2"/>
+              </Item3>
+            </Item1>
+            <Item2 Name="ProjectInspector" Type="Control" WindowState="Maximized">
+              <Bounds Width="1064" Height="459"/>
+              <Anchors Align="Client"/>
+            </Item2>
+          </Item1>
+          <Item2 Name="GlassDockSplitter3" Type="SplitterHorizontal" WindowState="Maximized">
+            <Bounds Top="487" Width="1366" Height="4"/>
+          </Item2>
+          <Item3 Name="MessagesView" Type="Control" WindowState="Maximized">
+            <Bounds Top="491" Width="1366" Height="98"/>
+            <Anchors Top="GlassDockSplitter3"/>
+          </Item3>
+        </Item1>
+      </Item1>
+    </Nodes>
+  </MainConfig>
+  <Restores Count="1">
+    <Item1 Names="ObjectInspectorDlg">
+      <Nodes Name="MainIDE" Type="CustomSite" ChildCount="1" WindowState="Maximized">
+        <Bounds Top="-8" Left="-8" Width="1366" Height="705">
+          <WorkArea>
+            <Rect Right="1366" Bottom="728"/>
+          </WorkArea>
+        </Bounds>
+        <Item1 Name="GlassDockSite5" Type="Layout" ChildCount="5" WindowState="Maximized">
+          <Bounds Top="96" Width="1366" Height="589" SplitterPos="92"/>
+          <Anchors Align="Bottom"/>
+          <Item1 Name="GlassDockSite6" Type="Pages" ChildCount="2" WindowState="Maximized">
+            <Bounds Left="294" Width="1072" Height="487"/>
+            <Anchors Left="GlassDockSplitter2" Bottom="GlassDockSplitter3"/>
+            <Item1 Name="SourceNotebook" Type="Control" WindowState="Maximized">
+              <Bounds Width="1064" Height="459"/>
+              <Anchors Align="Client"/>
+            </Item1>
+            <Item2 Name="ProjectInspector" Type="Control" WindowState="Maximized">
+              <Bounds Width="1064" Height="459"/>
+              <Anchors Align="Client"/>
+            </Item2>
+          </Item1>
+          <Item2 Name="GlassDockSplitter2" Type="SplitterVertical" WindowState="Maximized">
+            <Bounds Left="290" Width="4" Height="487"/>
+            <Anchors Bottom="GlassDockSplitter3"/>
+          </Item2>
+          <Item3 Name="ObjectInspectorDlg" Type="Control" WindowState="Maximized">
+            <Bounds Width="290" Height="487"/>
+            <Anchors Right="GlassDockSplitter2" Bottom="GlassDockSplitter3"/>
+          </Item3>
+          <Item4 Name="GlassDockSplitter3" Type="SplitterHorizontal" WindowState="Maximized">
+            <Bounds Top="487" Width="1366" Height="4"/>
+          </Item4>
+          <Item5 Name="MessagesView" Type="Control" WindowState="Maximized">
+            <Bounds Top="491" Width="1366" Height="98"/>
+            <Anchors Top="GlassDockSplitter3"/>
+          </Item5>
+        </Item1>
+      </Nodes>
+    </Item1>
+  </Restores>
+</CONFIG>
