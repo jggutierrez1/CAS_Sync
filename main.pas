@@ -91,6 +91,10 @@ procedure TfMain.FormCreate(Sender: TObject);
 var
   cPath, cFile: string;
 begin
+  ShortDateFormat := 'dd/mm/yyyy';
+  DateSeparator := '/';
+  DecimalSeparator := '.';
+  ThousandSeparator := ',';
 
   cPath := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName));
   cFile := cPath + 'config_sync.ini';

@@ -1,9 +1,9 @@
 object fMain: TfMain
-  Left = 328
+  Left = 289
   Height = 423
   Top = 185
   Width = 791
-  Caption = 'Sincronizador de datos V1.0'
+  Caption = 'Sincronizador de datos V1.1'
   ClientHeight = 423
   ClientWidth = 791
   OnActivate = FormActivate
