@@ -1,5 +1,5 @@
 object fMain: TfMain
-  Left = 289
+  Left = 365
   Height = 423
   Top = 185
   Width = 791
@@ -2184,5 +2184,13 @@ object fMain: TfMain
     Delimiter = ';'
     Left = 480
     Top = 272
+  end
+  object oDbf_Ctr: TDbf
+    DateTimeHandling = dtDateTime
+    IndexDefs = <>
+    TableLevel = 30
+    FilterOptions = []
+    Left = 592
+    Top = 16
   end
 end

@@ -15,6 +15,7 @@ type
 
   TfMain = class(TForm)
     oCmd_Orig: TZSQLProcessor;
+    oDbf_Ctr: TDbf;
     oDS_Orig: TDataSource;
     oDS_Dest: TDataSource;
     oDbf_Orig: TDbf;
@@ -58,17 +59,15 @@ type
   private
     oINI: TINIFile;
     cSrv_Orig, cSrv_Dest: string;
-    iSrv_TypeO, iSrv_TypeD: integer;
     iAtoplay: integer;
     oSL_Orig: TStringList;
     oSL_Dest: TStringList;
     oMa_Orig: TStringList;
     oMa_Dest: TStringList;
     cDBF_PATHO, cDBF_NAMEO: string;
-    cDBF_PATHD, cDBF_NAMED: string;
-    cDatabaseO, cPROTOCOLO, cHOSTNAMEO, cUSERNAMEO, cPASSWORDO, cLIMITSELO: string;
+    cDBF_NAMED: string;
+    cDBF_CTRL_DB, cLIMITSELO: string;
     cDatabaseD, cPROTOCOLD, cHOSTNAMED, cUSERNAMED, cPASSWORDD, cLIMITSELD: string;
-    iPORT_NUMO: integer;
     iPORT_NUMD: integer;
     iDelayTab: integer;
     iTimerDoi: integer;
@@ -118,20 +117,13 @@ begin
 
   self.oMa_Orig.CommaText := oINI.ReadString(cSrv_Orig, 'MASTER_FIELD', '');
   self.oSL_Orig.CommaText := oINI.ReadString(cSrv_Orig, 'TABLES_NAMES', '');
-  self.iSrv_TypeO := oINI.ReadInteger(cSrv_Orig, 'DATABDBF', 1);
   self.cDBF_PATHO := oINI.ReadString(cSrv_Orig, 'DBF_PATH', '');
-  self.cDatabaseO := oINI.ReadString(cSrv_Orig, 'DB_NAME', '');
-  self.cPROTOCOLO := oINI.ReadString(cSrv_Orig, 'PROTOCOL', '');
-  self.cHOSTNAMEO := oINI.ReadString(cSrv_Orig, 'HOSTNAME', '');
-  self.cUSERNAMEO := oINI.ReadString(cSrv_Orig, 'USERNAME', '');
-  self.cPASSWORDO := oINI.ReadString(cSrv_Orig, 'PASSWORD', '');
-  self.iPORT_NUMO := oIni.ReadInteger(cSrv_Orig, 'PORT_NUM', 0);
   self.cLIMITSELO := oIni.ReadString(cSrv_Orig, 'LIMITSEL', '25');
+  self.cDBF_CTRL_DB := oIni.ReadString(cSrv_Orig, 'STOP_CTRL_DB', '');
+
 
   self.oMa_Dest.CommaText := oINI.ReadString(cSrv_Dest, 'MASTER_FIELD', '');
   self.oSL_Dest.CommaText := oINI.ReadString(cSrv_Dest, 'TABLES_NAMES', '');
-  self.iSrv_TypeD := oINI.ReadInteger(cSrv_Dest, 'DATABDBF', 0);
-  self.cDBF_PATHD := oINI.ReadString(cSrv_Dest, 'DBF_PATH', '');
   self.cDatabaseD := oINI.ReadString(cSrv_Dest, 'DB_NAME', 'cas');
   self.cPROTOCOLD := oINI.ReadString(cSrv_Dest, 'PROTOCOL', 'mysql');
   self.cHOSTNAMED := oINI.ReadString(cSrv_Dest, 'HOSTNAME', '127.0.0.1');
@@ -148,6 +140,25 @@ end;
 procedure TfMain.FormShow(Sender: TObject);
 begin
   self.oLog.Lines.Clear;
+
+  self.oDbf_Ctr.Close;
+  self.oDbf_Ctr.FilePathFull := self.cDBF_PATHO;
+  self.oDbf_Ctr.TableName := self.cDBF_CTRL_DB;
+  self.oDbf_Ctr.Exclusive := False;
+  self.oDbf_Ctr.Filter := '';
+  self.oDbf_Ctr.Filtered := False;
+  self.oDbf_Ctr.ShowDeleted := False;
+  try
+    self.oDbf_Ctr.Open;
+    self.oDbf_Ctr.First;
+
+    self.oLog.Lines.Insert(0, 'Apertura de tabla de control [' + self.cDBF_CTRL_DB + '] exitosa.');
+    self.oLog.Repaint;
+  except
+    self.oLog.Lines.Insert(0, 'Error al tratar de abrir la tabla de control [' + self.cDBF_CTRL_DB + '].');
+    self.oLog.Repaint;
+  end;
+
 end;
 
 procedure TfMain.Start_Connections(iIndex: integer = 0);
@@ -420,6 +431,12 @@ var
   I, iCount: integer;
   cSql_Ln: WideString;
 begin
+  if not self.oDbf_Ctr.FieldByName('stop').IsNull then
+  begin
+    if (self.oDbf_Ctr.FieldByName('stop').AsInteger = 1) then
+      exit;
+  end;
+
   self.oTimer1.Enabled := False;
   if (self.oLog.Lines.Count > 100) then
   begin
