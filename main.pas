@@ -568,6 +568,44 @@ begin
   self.oQry_GenDes.Close;
 end;
 
+{ --------------------------------------------------------------------------------------------
+  Esta función ejecuta comandos sql en una coneccion.
+  ---------------------------------------------------------------------------------------------- }
+function TfMain.Dest_query_updateg(cSql_Cmd: string; bShow_QryMessage: boolean = False): boolean;
+var
+  ex_query: tzquery;
+  bShowMessage: boolean;
+begin
+
+  if (bShow_QryMessage = True) then
+  begin
+    if (bShowMessage = False) then
+    begin
+      bShowMessage := True;
+    end;
+  end;
+
+  ex_query := tzquery.Create(nil);
+  ex_query.Connection := self.oConn_Dest;
+
+  ex_query.Close;
+  ex_query.SQL.Clear;
+  ex_query.SQL.Text := cSql_Cmd;
+
+  try
+    ex_query.ExecSQL;
+    Result := True;
+  except
+    on E: Exception do
+    begin
+      if (bShowMessage = True) then
+        application.ShowException(E);
+      Result := False;
+    end;
+  end;
+  FreeAndNil(ex_query);
+end;
+
 procedure TfMain.oTimer1Timer(Sender: TObject);
 var
   I, iCount: integer;
@@ -645,6 +683,16 @@ begin
       //--------------*ENVIO DE INFORMACION AL ESTINO*-----------------//
       //---------------------------------------------------------------//
 
+      iField1 := self.Orig_Fields_Counts(self.oDbf_Orig);
+
+      iField2 := self.Dest_Fields_Counts(self.oSL_Dest[I]);
+      iField2 := iField2 + self.iif(self.Dest_FieldExists('autoin', trim(self.cDatabaseD) + '.' + trim(self.oSL_Dest[I])) = True, -1, 0);
+
+      if (iField1 > iField2) then
+      begin
+        SELF.Dataset_To_Mysql_Create(trim(self.oSL_Dest[I]));
+      end;
+
       if (self.Orig_FieldExists(self.oDbf_Orig, 'flag_modif') = False) then
       begin
         cMessage := 'ERR-> TABLA ORIGEN [' + self.cDBF_PATHO + '\' + self.oSL_Orig[I] + '] NO CONTIENE CAMPO DE CONTROL ("flag_modif")';
@@ -653,14 +701,14 @@ begin
         bSkip_Table := True;
       end;
 
-      if (self.Dest_FieldExists('flag_modif', self.oSL_Dest[I]) = False) then
+      if (self.Dest_FieldExists('flag_modif', trim(self.cDatabaseD) + '.' + trim(self.oSL_Dest[I])) = False) then
       begin
-        cMessage := 'ERR-> TABLA DESTINO [' + self.cHOSTNAMED + '>' + self.cDatabaseD + '.' + self.oSL_Dest[I] +
+        cMessage := 'ERR-> TABLA DESTINO [' + self.cHOSTNAMED + '>' + trim(self.cDatabaseD) + '.' + trim(self.oSL_Dest[I]) +
           '] NO CONTIENE CAMPO DE CONTROL ("flag_modif")';
         self.oLog.Lines.Insert(0, cMessage);
         self.oLog.Repaint;
 
-        self.Dest_Add_Ctrl_Field(self.oSL_Dest[I]);
+        self.Dest_Add_Ctrl_Field(trim(self.oSL_Dest[I]));
         cMessage := 'AÑADIENDO CAMPO DE CONTROL DE AUTOMATICAMENTE A  TABLA DESTINO [' + self.cHOSTNAMED + '>' +
           self.cDatabaseD + '.' + self.oSL_Dest[I] + '].';
         self.oLog.Lines.Insert(0, cMessage);
@@ -670,10 +718,6 @@ begin
       end;
 
       //--------------*COMPARA LOS CAMPOS PARA VER SI SON DIFERENTES---//
-      iField1 := self.Orig_Fields_Counts(self.oDbf_Orig);
-
-      iField2 := self.Dest_Fields_Counts(self.oSL_Dest[I]);
-      iField2 := iField2 + self.iif(self.Dest_FieldExists('autoin', self.oSL_Dest[I]) = True, -1, 0);
 
       if (iField1 > iField2) then
       begin
@@ -965,61 +1009,133 @@ begin
   Result := oTable.FieldCount;
 end;
 
-procedure TfMain.Dataset_To_Mysql_Create(cTblName: string);
-var
-  x: integer;
-begin
-end;
-
 procedure TfMain.Dest_Add_Ctrl_Field(cTableName: string);
 var
   cSql_Ln: string;
 begin
-  cSql_Ln := 'ALTER TABLE ' + cTableName + ' ADD COLUMN `flag_modif` INT(1) NULL DEFAULT 0;';
+  cSql_Ln := 'ALTER TABLE `' + trim(self.cDatabaseD) + '`.' + cTableName + ' ADD COLUMN `flag_modif` INT(1) NULL DEFAULT 0;';
   self.Dest_query_updateg(cSql_Ln);
   self.oLog.Lines.Insert(0, cSql_Ln);
   self.oLog.Repaint;
 
-  cSql_Ln := 'ALTER TABLE ' + cTableName + ' ADD INDEX `flag_modif` (`flag_modif`);';
+  cSql_Ln := 'ALTER TABLE `' + trim(self.cDatabaseD) + '`.' + cTableName + '` ADD INDEX `flag_modif` (`flag_modif`);';
   self.Dest_query_updateg(cSql_Ln);
   self.oLog.Lines.Insert(0, cSql_Ln);
   self.oLog.Repaint;
-
 end;
 
-function TfMain.Dest_query_updateg(cSql_Cmd: string; bShow_QryMessage: boolean = False): boolean;
+procedure TfMain.Dataset_To_Mysql_Create(cTblName: string);
 var
-  ex_query: tzquery;
-  bShowMessage: boolean;
+  iIdx, iFields_Cnt: integer;
+  iType: TFieldType;
+  iSize: integer;
+  cColumnName, cSql_Ln: string;
+  cType, cPres, cDefa: string;
 begin
-
-  if (bShow_QryMessage = True) then
+  iFields_Cnt := self.oDbf_Orig.FieldCount;
+  for iIdx := 0 to (iFields_Cnt - 1) do
   begin
-    if (bShowMessage = False) then
+    iType := self.oDbf_Orig.Fields[iIdx].FieldDef.DataType;
+    iSize := self.oDbf_Orig.Fields[iIdx].FieldDef.Size;
+    cColumnName := TRIM(self.oDbf_Orig.Fields[iIdx].FieldName);
+
+    if (self.Dest_FieldExists(cColumnName, trim(cTblName)) = False) then
     begin
-      bShowMessage := True;
+      //ftUnknown,
+      if (iType in [ftString, ftWideString]) then
+      begin
+        cType := ' CHAR';
+        cPres := '(' + trim(IntToStr(iSize)) + ')';
+        cDefa := '""';
+      end;
+
+      if (iType in [ftSmallint, ftInteger]) then
+      begin
+        cType := ' INT';
+        cPres := '(' + trim(IntToStr(iSize)) + ')';
+        cDefa := '0';
+      end;
+
+      if (iType in [ftFloat, ftCurrency]) then
+      begin
+        cType := ' DECIMAL';
+        cPres := '(12,4)';
+        cDefa := '0.00';
+      end;
+
+      if (iType in [ftDate]) then
+      begin
+        cType := ' DATE';
+        cPres := '';
+        cDefa := 'NULL';
+      end;
+
+      if (iType in [ftDateTime]) then
+      begin
+        cType := ' DATETIME';
+        cPres := '';
+        cDefa := 'NULL';
+      end;
+
+      if (iType in [ftTime]) then
+      begin
+        cType := ' TIME';
+        cPres := '';
+        cDefa := 'NULL';
+      end;
+
+      if (iType in [ftTimeStamp]) then
+      begin
+        cType := ' TIMESTAMP';
+        cPres := '';
+        cDefa := 'NULL';
+      end;
+
+      if (iType in [ftLargeint]) then
+      begin
+        cType := ' BIGINT';
+        cPres := '(20)';
+        cDefa := '0';
+      end;
+
+      if (iType in [ftBlob, ftDataSet]) then
+      begin
+        cType := ' BLOB';
+        cPres := '';
+        cDefa := 'NULL';
+      end;
+
+      if (iType in [ftWideString]) then
+      begin
+        cType := ' TEXT';
+        cPres := '';
+        cDefa := 'NULL';
+      end;
+
+      if (iType in [ftMemo]) then
+      begin
+        cType := ' MEDIUMTEXT';
+        cPres := '';
+        cDefa := 'NULL';
+      end;
+
+      if (iType in [ftWideMemo]) then
+      begin
+        cType := ' LONGTEXT';
+        cPres := '';
+        cDefa := 'NULL';
+      end;
+
+      cSql_Ln := 'ALTER TABLE `' + trim(self.cDatabaseD) + '`.`' + trim(cTblName) + '` ADD COLUMN `' + LOWERCASE(cColumnName) +
+        '` ' + cType + ' ' + cPres + ' NULL DEFAULT ' + cDefa + ';';
+      self.Dest_query_updateg(cSql_Ln);
+
+      self.oLog.Lines.Insert(0, cSql_Ln);
+      self.oLog.Repaint;
+
     end;
   end;
 
-  ex_query := tzquery.Create(nil);
-  ex_query.Connection := self.oConn_Dest;
-
-  ex_query.Close;
-  ex_query.SQL.Clear;
-  ex_query.SQL.Text := cSql_Cmd;
-
-  try
-    ex_query.ExecSQL;
-    Result := True;
-  except
-    on E: Exception do
-    begin
-      if (bShowMessage = True) then
-        application.ShowException(E);
-      Result := False;
-    end;
-  end;
-  FreeAndNil(ex_query);
 end;
 
 end.
