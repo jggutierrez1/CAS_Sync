@@ -2,18 +2,18 @@ object fMain: TfMain
   Left = 365
   Height = 423
   Top = 185
-  Width = 791
+  Width = 981
   Caption = 'Sincronizador de datos V1.1'
   ClientHeight = 423
-  ClientWidth = 791
+  ClientWidth = 981
   OnActivate = FormActivate
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnShow = FormShow
-  Position = poMainFormCenter
+  Position = poScreenCenter
   LCLVersion = '6.5'
   object olEstatus: TLabel
-    Left = 272
+    Left = 361
     Height = 37
     Top = 8
     Width = 259
@@ -629,9 +629,9 @@ object fMain: TfMain
     TabOrder = 1
   end
   object oBtn_Exit: TBitBtn
-    Left = 656
+    Left = 848
     Height = 84
-    Top = 328
+    Top = 336
     Width = 127
     Caption = 'Salir'
     Glyph.Data = {
@@ -1571,7 +1571,7 @@ object fMain: TfMain
     Left = 8
     Height = 262
     Top = 64
-    Width = 776
+    Width = 968
     Font.Height = -13
     Font.Name = 'Courier New'
     Font.Pitch = fpFixed
@@ -2192,5 +2192,15 @@ object fMain: TfMain
     FilterOptions = []
     Left = 592
     Top = 16
+  end
+  object oQry_GenDes: TZQuery
+    Connection = oConn_Dest
+    SQL.Strings = (
+      'SELECT * FROM socios WHERE 1=0'
+    )
+    ParamCheck = False
+    Params = <>
+    Left = 576
+    Top = 344
   end
 end

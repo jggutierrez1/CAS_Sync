@@ -29,6 +29,7 @@ type
     oBtn_Play: TBitBtn;
     olEstatus: TLabel;
     oBtn_Exit: TBitBtn;
+    oQry_GenDes: TZQuery;
     oQry_Orig: TZQuery;
     oSysTrayMenu: TPopupMenu;
     oTimer1: TTimer;
@@ -56,6 +57,19 @@ type
     procedure LogFile(Info: string);
     function IIF(Condition: boolean; TrueResult, FalseResult: variant): variant;
     procedure Dataset_To_DBF_Values_Send(iLimitInserts: integer = 20);
+    procedure Dataset_To_Mysql_Create(cTblName: string);
+    function Dest_query_selectgen_result(oConn: TZConnection; cSql_Cmd: string): string;
+    function Dest_DatabaseExists(DBName: string): boolean;
+    function Dest_TableExists(DBName: string; TableName: string): boolean;
+    function Dest_FieldExists2(var field: string; Full_DB_Table_Name: string): boolean;
+    function Dest_FieldExists(field: string; Full_DB_Table_Name: string): boolean;
+    function Dest_Fields_Counts(Full_DB_Table_Name: string): integer;
+    procedure Dest_Add_Ctrl_Field(cTableName: string);
+    function Dest_query_updateg(cSql_Cmd: string; bShow_QryMessage: boolean = False): boolean;
+
+    function Orig_TableExists(cTableName: string): boolean;
+    function Orig_FieldExists(oTable: TDbf; cField: string): boolean;
+    function Orig_Fields_Counts(oTable: TDbf): integer;
   private
     oINI: TINIFile;
     cSrv_Orig, cSrv_Dest: string;
@@ -72,6 +86,9 @@ type
     iDelayTab: integer;
     iTimerDoi: integer;
     iMasterIdx: integer;
+    bCheck_CTRL_DB: boolean;
+    cMessE_CTRL_DB: string;
+    cMessaje_Mant: string;
   public
 
   end;
@@ -90,6 +107,10 @@ procedure TfMain.FormCreate(Sender: TObject);
 var
   cPath, cFile: string;
 begin
+  self.bCheck_CTRL_DB := True;
+  self.cMessE_CTRL_DB := '';
+  self.cMessaje_Mant := '';
+
   ShortDateFormat := 'dd/mm/yyyy';
   DateSeparator := '/';
   DecimalSeparator := '.';
@@ -174,8 +195,8 @@ begin
   self.oDbf_Orig.FilePathFull := self.cDBF_PATHO;
   self.oDbf_Orig.TableName := self.cDBF_NAMEO;
   self.oDbf_Orig.Exclusive := False;
-  self.oDbf_Orig.Filter := 'flag_modif=1';
-  self.oDbf_Orig.Filtered := True;
+  self.oDbf_Orig.Filter := '';
+  self.oDbf_Orig.Filtered := False;
   self.oDbf_Orig.ShowDeleted := False;
   //self.oDbf_Orig.ReadOnly := True;
   try
@@ -206,9 +227,6 @@ begin
   self.oQry_Dest.Close;
   self.oQry_Dest.Filter := '';
   self.oQry_Dest.Filtered := False;
-  self.query_selectg(self.oConn_Dest, self.oQry_Dest, 'SELECT * FROM ' + self.cDBF_NAMED + ' WHERE flag_modif=1 LIMIT ' + self.cLIMITSELD);
-
-  SELF.oDS_Orig.DataSet := self.oQry_Dest;
 end;
 
 procedure TfMain.Dataset_To_DBF_Values_Send(iLimitInserts: integer = 20);
@@ -426,15 +444,187 @@ begin
     Result := True;
 end;
 
+function TfMain.Dest_query_selectgen_result(oConn: TZConnection; cSql_Cmd: string): string;
+begin
+  try
+    self.oQry_GenDes.Close;
+    self.oQry_GenDes.SQL.Clear;
+    self.oQry_GenDes.SQL.Text := cSql_Cmd;
+    self.oQry_GenDes.Open;
+    if (self.oQry_GenDes.Fields[0].Text <> '') then
+      Result := self.oQry_GenDes.Fields[0].Text
+    else
+      Result := self.oQry_GenDes.Fields[0].Text;
+    self.oQry_GenDes.Close;
+  except
+    Result := '';
+  end;
+end;
+
+{ --------------------------------------------------------------------------------------------
+  Esta función devuelve true si la tabla existe en la base de datos y false si no existe.
+  ---------------------------------------------------------------------------------------------- }
+function TfMain.Dest_TableExists(DBName: string; TableName: string): boolean;
+var
+  cSqlCmdl: string;
+begin
+  cSqlCmdl := 'SHOW TABLES FROM ' + DBName + ' LIKE "' + TableName + '" ';
+  self.oQry_GenDes.Close;
+  self.query_selectg(self.oConn_Dest, self.oQry_GenDes, cSqlCmdl);
+  if not self.oQry_GenDes.EOF then
+  begin
+    if (self.oQry_GenDes.RecordCount > 0) then
+      Result := True
+    else
+      Result := False;
+  end
+  else
+    Result := False;
+  self.oQry_GenDes.Close;
+end;
+
+{ --------------------------------------------------------------------------------------------
+  Esta función devuelve true si la base de datos existe en mysql.
+  ---------------------------------------------------------------------------------------------- }
+function TfMain.Dest_DatabaseExists(DBName: string): boolean;
+var
+  cSqlCmdl: string;
+begin
+  self.oQry_GenDes.Close;
+  cSqlCmdl := 'SHOW DATABASES LIKE "' + DBName + '" ';
+  self.query_selectg(self.oConn_Dest, self.oQry_GenDes, cSqlCmdl);
+  if not self.oQry_GenDes.EOF then
+  begin
+    if (self.oQry_GenDes.RecordCount > 0) then
+      Result := True
+    else
+      Result := False;
+  end
+  else
+    Result := False;
+  self.oQry_GenDes.Close;
+end;
+
+{ --------------------------------------------------------------------------------------------
+  Esta función devuelve true si el campo existe en la tabla y false si no existe.
+  ---------------------------------------------------------------------------------------------- }
+function TfMain.Dest_FieldExists(field: string; Full_DB_Table_Name: string): boolean;
+var
+  cSqlCmdl: string;
+begin
+  self.oQry_GenDes.Close;
+  cSqlCmdl := 'SHOW COLUMNS FROM ' + Full_DB_Table_Name + ' WHERE UCASE(field)=UCASE("' + trim(field) + '") ';
+  if self.query_selectg(self.oConn_Dest, self.oQry_GenDes, cSqlCmdl) = True then
+  begin
+    if self.oQry_GenDes.RecordCount > 0 then
+    begin
+      Result := True;
+    end
+    else
+      Result := False;
+  end
+  else
+    Result := False;
+  self.oQry_GenDes.Close;
+end;
+
+{ --------------------------------------------------------------------------------------------
+  Esta función devuelve true si el campo existe en la tabla y false si no existe.
+  ---------------------------------------------------------------------------------------------- }
+function TfMain.Dest_FieldExists2(var field: string; Full_DB_Table_Name: string): boolean;
+var
+  cSqlCmdl: string;
+begin
+  cSqlCmdl := 'SHOW COLUMNS FROM ' + Full_DB_Table_Name + ' WHERE UCASE(field)=UCASE("' + trim(field) + '") ';
+  self.oQry_GenDes.Close;
+  if self.query_selectg(self.oConn_Dest, self.oQry_GenDes, cSqlCmdl) = True then
+  begin
+    if self.oQry_GenDes.RecordCount > 0 then
+    begin
+      field := self.oQry_GenDes.FieldByName('field').AsString;
+      Result := True;
+    end
+    else
+      Result := False;
+  end
+  else
+    Result := False;
+  self.oQry_GenDes.Close;
+end;
+
+{ --------------------------------------------------------------------------------------------
+  Esta función devuelve el numero de campos de una tabla, es necesarios especificada la tabla .
+  ---------------------------------------------------------------------------------------------- }
+function TfMain.Dest_Fields_Counts(Full_DB_Table_Name: string): integer;
+var
+  cSqlCmdl: string;
+begin
+  Result := 0;
+  cSqlCmdl := 'SHOW COLUMNS FROM ' + Full_DB_Table_Name + ' ';
+  self.oQry_GenDes.Close;
+  self.query_selectg(self.oConn_Dest, self.oQry_GenDes, cSqlCmdl);
+  if not self.oQry_GenDes.EOF then
+    Result := self.oQry_GenDes.RecordCount;
+  self.oQry_GenDes.Close;
+end;
+
 procedure TfMain.oTimer1Timer(Sender: TObject);
 var
   I, iCount: integer;
   cSql_Ln: WideString;
+  cMessage: string;
+  iField1, iField2: integer;
+  bSkip_Table: boolean;
 begin
-  if not self.oDbf_Ctr.FieldByName('stop').IsNull then
+  cMessage := '';
+  bSkip_Table := False;
+  //-------------------VERIFICA TABLA DE CONTROL DE CLICOS----------------------
+  if (self.bCheck_CTRL_DB = True) then
   begin
-    if (self.oDbf_Ctr.FieldByName('stop').AsInteger = 1) then
-      exit;
+    self.cMessE_CTRL_DB := '';
+    if (self.Orig_TableExists(self.cDBF_CTRL_DB) = False) then
+    begin
+      self.bCheck_CTRL_DB := False;
+      self.cMessE_CTRL_DB := 'ERR-> TABLA DE CONTROL(' + self.cDBF_PATHO + '/' + self.cDBF_CTRL_DB + '), NO EXISTE!!!' + #13;
+    end
+    else
+    begin
+      if ((self.Orig_FieldExists(self.oDbf_Ctr, 'stop') = False) or (self.Orig_FieldExists(self.oDbf_Ctr, 'eng_stoped') = False)) then
+      begin
+        self.bCheck_CTRL_DB := False;
+        self.cMessE_CTRL_DB := self.cMessE_CTRL_DB + 'ERR-> TABLA DE CONTROL (' + self.cDBF_PATHO + '/' +
+          self.cDBF_CTRL_DB + '), LA ESTRUCTURA LE FANTAN LOS CAMPOS ("stop" ó "eng_stoped").';
+      end;
+    end;
+  end;
+  //----------------------------------------------------------------------------
+
+  if (trim(self.cMessE_CTRL_DB) = '') then
+  begin
+    //-------------------VERIFICA ORDENES DEL LA TABLA DE CONTROL-----------------
+    if not self.oDbf_Ctr.FieldByName('stop').IsNull then
+    begin
+      if (self.oDbf_Ctr.FieldByName('stop').AsInteger = 1) then
+      begin
+        self.oDbf_Ctr.Edit;
+        self.oDbf_Ctr.FieldByName('eng_stoped').AsInteger := 1;
+        self.oDbf_Ctr.Post;
+        if (self.cMessaje_Mant = '') then
+        begin
+          self.cMessaje_Mant := 'SE RECIBIO UNA ORDEN DE SUSPENCION POR MANTENIMIENTO!!!';
+          self.oLog.Lines.Insert(0, self.cMessaje_Mant);
+          self.oLog.Repaint;
+        end;
+        exit;
+      end
+      else
+        self.cMessaje_Mant := '';
+    end;
+  end
+  else
+  begin
+    self.oLog.Lines.Insert(0, self.cMessE_CTRL_DB);
+    self.oLog.Repaint;
   end;
 
   self.oTimer1.Enabled := False;
@@ -449,38 +639,101 @@ begin
 
     for I := 0 to self.oSL_Orig.Count - 1 do
     begin
+      bSkip_Table := False;
       self.iMasterIdx := I;
       self.Start_Connections(I);
       //--------------*ENVIO DE INFORMACION AL ESTINO*-----------------//
       //---------------------------------------------------------------//
 
-      cSql_Ln := '';
-      self.Dataset_To_MySql_Header_Send(cSql_Ln, self.oSL_Dest[I]);
-      self.Dataset_To_MySql_Values_Send(cSql_Ln, 20);
-      self.oLog.Lines.Insert(0, cSql_Ln);
-      self.oLog.Repaint;
-
-      if (trim(cSql_Ln) <> '') then
+      if (self.Orig_FieldExists(self.oDbf_Orig, 'flag_modif') = False) then
       begin
-        self.oCmd_Dest.Clear;
-        self.oCmd_Dest.Script.Clear;
-        self.oCmd_Dest.Script.Text := cSql_Ln;
-        self.oCmd_Dest.Parse;
-        try
-          self.oCmd_Dest.Execute;
-          self.oLog.Lines.Insert(0, 'Comando ejecutado correctamente.');
-          self.oLog.Repaint;
+        cMessage := 'ERR-> TABLA ORIGEN [' + self.cDBF_PATHO + '\' + self.oSL_Orig[I] + '] NO CONTIENE CAMPO DE CONTROL ("flag_modif")';
+        self.oLog.Lines.Insert(0, cMessage);
+        self.oLog.Repaint;
+        bSkip_Table := True;
+      end;
 
-        except
-          self.oLog.Lines.Insert(0, 'ERROR al ejecutar el comando.');
+      if (self.Dest_FieldExists('flag_modif', self.oSL_Dest[I]) = False) then
+      begin
+        cMessage := 'ERR-> TABLA DESTINO [' + self.cHOSTNAMED + '>' + self.cDatabaseD + '.' + self.oSL_Dest[I] +
+          '] NO CONTIENE CAMPO DE CONTROL ("flag_modif")';
+        self.oLog.Lines.Insert(0, cMessage);
+        self.oLog.Repaint;
+
+        self.Dest_Add_Ctrl_Field(self.oSL_Dest[I]);
+        cMessage := 'AÑADIENDO CAMPO DE CONTROL DE AUTOMATICAMENTE A  TABLA DESTINO [' + self.cHOSTNAMED + '>' +
+          self.cDatabaseD + '.' + self.oSL_Dest[I] + '].';
+        self.oLog.Lines.Insert(0, cMessage);
+        self.oLog.Repaint;
+
+        bSkip_Table := False;
+      end;
+
+      //--------------*COMPARA LOS CAMPOS PARA VER SI SON DIFERENTES---//
+      iField1 := self.Orig_Fields_Counts(self.oDbf_Orig);
+
+      iField2 := self.Dest_Fields_Counts(self.oSL_Dest[I]);
+      iField2 := iField2 + self.iif(self.Dest_FieldExists('autoin', self.oSL_Dest[I]) = True, -1, 0);
+
+      if (iField1 > iField2) then
+      begin
+        cMessage := 'ERR-> TABLA [' + self.cDBF_PATHO + '\' + self.oSL_Orig[I] + '] TIENE MAS CAMPOS (' +
+          trim(IntToStr(iField1)) + ') QUE [' + self.cHOSTNAMED + '>' + self.cDatabaseD + '.' + self.oSL_Dest[I] +
+          '] (' + trim(IntToStr(iField2)) + ')';
+        self.oLog.Lines.Insert(0, cMessage);
+        self.oLog.Repaint;
+        bSkip_Table := True;
+      end
+      else
+      begin
+        if (iField1 < iField2) then
+        begin
+          cMessage := 'ERR-> TABLA [' + self.cDBF_PATHO + '\' + self.oSL_Orig[I] + '] TIENE MENOS CAMPOS (' +
+            trim(IntToStr(iField1)) + ') QUE [' + self.cHOSTNAMED + '>' + self.cDatabaseD + '.' + self.oSL_Dest[I] +
+            '] (' + trim(IntToStr(iField2)) + ')';
+          self.oLog.Lines.Insert(0, cMessage);
           self.oLog.Repaint;
+          bSkip_Table := True;
         end;
       end;
-      //Sleep(3000);
-      //--------------*ENVIO DE INFORMACION AL ORGEN*------------------//
       //---------------------------------------------------------------//
-      SELF.Dataset_To_DBF_Values_Send(20);
-      //SELF.do_process_to_dest;
+
+      cSql_Ln := '';
+      if (bSkip_Table = False) then
+      begin
+        self.oDbf_Orig.Filter := 'flag_modif=1';
+        self.oDbf_Orig.Filtered := True;
+
+        self.query_selectg(self.oConn_Dest, self.oQry_Dest, 'SELECT * FROM ' + self.cDBF_NAMED + ' WHERE flag_modif=1 LIMIT ' + self.cLIMITSELD);
+        SELF.oDS_Orig.DataSet := self.oQry_Dest;
+
+        self.Dataset_To_MySql_Header_Send(cSql_Ln, self.oSL_Dest[I]);
+        self.Dataset_To_MySql_Values_Send(cSql_Ln, 20);
+        self.oLog.Lines.Insert(0, cSql_Ln);
+        self.oLog.Repaint;
+
+        if (trim(cSql_Ln) <> '') then
+        begin
+          self.oCmd_Dest.Clear;
+          self.oCmd_Dest.Script.Clear;
+          self.oCmd_Dest.Script.Text := cSql_Ln;
+          self.oCmd_Dest.Parse;
+          try
+            self.oCmd_Dest.Execute;
+            self.oLog.Lines.Insert(0, 'Comando ejecutado correctamente.');
+            self.oLog.Repaint;
+
+          except
+            self.oLog.Lines.Insert(0, 'ERROR al ejecutar el comando.');
+            self.oLog.Repaint;
+          end;
+        end;
+        //Sleep(3000);
+        //--------------*ENVIO DE INFORMACION AL ORGEN*------------------//
+        //---------------------------------------------------------------//
+        SELF.Dataset_To_DBF_Values_Send(20);
+        //SELF.do_process_to_dest;
+      end;
     end;
   end;
   self.oTimer1.Enabled := True;
@@ -683,6 +936,90 @@ begin
     Result := TrueResult
   else
     Result := FalseResult;
+end;
+
+function TfMain.Orig_TableExists(cTableName: string): boolean;
+begin
+  Result := FileExists(trim(self.cDBF_PATHO) + '\' + trim(cTableName));
+end;
+
+function TfMain.Orig_FieldExists(oTable: TDbf; cField: string): boolean;
+var
+  oFindField: TField;
+begin
+  oFindField := nil;
+  //if (oTable.FieldDefs.IndexOf(cField) > -1) then
+
+  //oFindField := oTable.Fields.FindField(cField);
+  //if (Assigned(oFindField)=false) then
+
+  if (oTable.Fields.FindField(cField) = nil) then
+    Result := False
+  else
+    Result := True;
+  FreeAndNil(oFindField);
+end;
+
+function TfMain.Orig_Fields_Counts(oTable: TDbf): integer;
+begin
+  Result := oTable.FieldCount;
+end;
+
+procedure TfMain.Dataset_To_Mysql_Create(cTblName: string);
+var
+  x: integer;
+begin
+end;
+
+procedure TfMain.Dest_Add_Ctrl_Field(cTableName: string);
+var
+  cSql_Ln: string;
+begin
+  cSql_Ln := 'ALTER TABLE ' + cTableName + ' ADD COLUMN `flag_modif` INT(1) NULL DEFAULT 0;';
+  self.Dest_query_updateg(cSql_Ln);
+  self.oLog.Lines.Insert(0, cSql_Ln);
+  self.oLog.Repaint;
+
+  cSql_Ln := 'ALTER TABLE ' + cTableName + ' ADD INDEX `flag_modif` (`flag_modif`);';
+  self.Dest_query_updateg(cSql_Ln);
+  self.oLog.Lines.Insert(0, cSql_Ln);
+  self.oLog.Repaint;
+
+end;
+
+function TfMain.Dest_query_updateg(cSql_Cmd: string; bShow_QryMessage: boolean = False): boolean;
+var
+  ex_query: tzquery;
+  bShowMessage: boolean;
+begin
+
+  if (bShow_QryMessage = True) then
+  begin
+    if (bShowMessage = False) then
+    begin
+      bShowMessage := True;
+    end;
+  end;
+
+  ex_query := tzquery.Create(nil);
+  ex_query.Connection := self.oConn_Dest;
+
+  ex_query.Close;
+  ex_query.SQL.Clear;
+  ex_query.SQL.Text := cSql_Cmd;
+
+  try
+    ex_query.ExecSQL;
+    Result := True;
+  except
+    on E: Exception do
+    begin
+      if (bShowMessage = True) then
+        application.ShowException(E);
+      Result := False;
+    end;
+  end;
+  FreeAndNil(ex_query);
 end;
 
 end.
