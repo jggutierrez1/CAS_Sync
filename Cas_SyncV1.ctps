@@ -8,8 +8,9 @@
       <Unit0>
         <Filename Value="Cas_SyncV1.ppr"/>
         <IsPartOfProject Value="True"/>
-        <CursorPos X="37" Y="15"/>
-        <UsageCount Value="128"/>
+        <TopLine Value="2"/>
+        <CursorPos X="30" Y="5"/>
+        <UsageCount Value="143"/>
         <Loaded Value="True"/>
       </Unit0>
       <Unit1>
@@ -20,9 +21,9 @@
         <ResourceBaseClass Value="Form"/>
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="687"/>
-        <CursorPos Y="692"/>
-        <UsageCount Value="128"/>
+        <TopLine Value="1211"/>
+        <CursorPos X="26" Y="1212"/>
+        <UsageCount Value="143"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit1>
@@ -32,28 +33,28 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="55"/>
         <CursorPos X="40" Y="68"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="14"/>
       </Unit2>
       <Unit3>
         <Filename Value="C:\codetyphon\typhon\lcl\include\customform.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="669"/>
         <CursorPos Y="681"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="20"/>
       </Unit3>
       <Unit4>
         <Filename Value="C:\codetyphon\typhon\lcl\include\application.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1397"/>
         <CursorPos Y="1413"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="20"/>
       </Unit4>
       <Unit5>
         <Filename Value="C:\codetyphon\typhon\lcl\include\wincontrol.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="7850"/>
         <CursorPos Y="7863"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="2"/>
       </Unit5>
       <Unit6>
         <Filename Value="C:\codetyphon\typhon\lcl\customtimer.pas"/>
@@ -61,28 +62,28 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="167"/>
         <CursorPos Y="176"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="5"/>
       </Unit6>
       <Unit7>
         <Filename Value="C:\codetyphon\typhon\components\pl_ZeosDBO\source\dbc\ZDbcIntfs.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1203"/>
         <CursorPos Y="1215"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="2"/>
       </Unit7>
       <Unit8>
         <Filename Value="C:\codetyphon\fpcsrc\packages\fcl-db\src\dbase\dbf.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1967"/>
         <CursorPos X="21" Y="1982"/>
-        <UsageCount Value="14"/>
+        <UsageCount Value="12"/>
       </Unit8>
       <Unit9>
         <Filename Value="C:\codetyphon\typhon\components\pl_ZeosDBO\source\dbc\ZDbcMySqlUtils.pas"/>
         <EditorIndex Value="3"/>
-        <TopLine Value="310"/>
-        <CursorPos Y="323"/>
-        <UsageCount Value="23"/>
+        <TopLine Value="307"/>
+        <CursorPos Y="320"/>
+        <UsageCount Value="31"/>
         <Loaded Value="True"/>
       </Unit9>
       <Unit10>
@@ -91,7 +92,7 @@
         <EditorIndex Value="2"/>
         <TopLine Value="1721"/>
         <CursorPos X="14" Y="1729"/>
-        <UsageCount Value="30"/>
+        <UsageCount Value="38"/>
         <Loaded Value="True"/>
       </Unit10>
       <Unit11>
@@ -99,55 +100,55 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="373"/>
         <CursorPos Y="384"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="19"/>
       </Unit11>
       <Unit12>
         <Filename Value="C:\codetyphon\typhon\components\pl_ZeosDBO\source\dbc\ZDbcMySqlStatement.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1099"/>
         <CursorPos Y="1109"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="19"/>
       </Unit12>
       <Unit13>
         <Filename Value="C:\codetyphon\typhon\components\pl_ZeosDBO\source\dbc\ZDbcGenericResolver.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="895"/>
         <CursorPos Y="905"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="19"/>
       </Unit13>
       <Unit14>
         <Filename Value="C:\codetyphon\typhon\components\pl_ZeosDBO\source\component\ZAbstractDataset.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="468"/>
         <CursorPos Y="522"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="19"/>
       </Unit14>
       <Unit15>
         <Filename Value="C:\codetyphon\typhon\components\pl_ZeosDBO\source\component\ZDataset.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="61"/>
         <CursorPos X="47" Y="63"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="6"/>
       </Unit15>
       <Unit16>
         <Filename Value="C:\codetyphon\typhon\components\pl_ZeosDBO\source\component\ZAbstractRODataset.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="3570"/>
         <CursorPos Y="3578"/>
-        <UsageCount Value="6"/>
+        <UsageCount Value="4"/>
       </Unit16>
       <Unit17>
         <Filename Value="C:\codetyphon\typhon\lcl\interfaces\win32\win32object.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="415"/>
         <CursorPos Y="423"/>
-        <UsageCount Value="6"/>
+        <UsageCount Value="4"/>
       </Unit17>
       <Unit18>
         <Filename Value="C:\codetyphon\typhon\components\Devart_UniDAC_Professional_6.4.15\Source\Lazarus1\dclunidac10.lpk"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="125"/>
-        <UsageCount Value="6"/>
+        <UsageCount Value="4"/>
         <DefaultSyntaxHighlighter Value="None"/>
       </Unit18>
       <Unit19>
@@ -155,130 +156,130 @@
         <EditorIndex Value="4"/>
         <TopLine Value="148"/>
         <CursorPos X="10" Y="158"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="24"/>
         <Loaded Value="True"/>
       </Unit19>
     </Units>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="main.pas"/>
-        <Caret Line="1031" TopLine="1018"/>
+        <Caret Line="758" TopLine="745"/>
       </Position1>
       <Position2>
         <Filename Value="main.pas"/>
-        <Caret Line="1033" TopLine="1018"/>
+        <Caret Line="759" TopLine="745"/>
       </Position2>
       <Position3>
         <Filename Value="main.pas"/>
-        <Caret Line="1034" TopLine="1018"/>
+        <Caret Line="760" TopLine="745"/>
       </Position3>
       <Position4>
         <Filename Value="main.pas"/>
-        <Caret Line="1035" TopLine="1018"/>
+        <Caret Line="818" Column="34" TopLine="808"/>
       </Position4>
       <Position5>
         <Filename Value="main.pas"/>
-        <Caret Line="1037" TopLine="1020"/>
+        <Caret Line="750" TopLine="780"/>
       </Position5>
       <Position6>
         <Filename Value="main.pas"/>
-        <Caret Line="1040" TopLine="1024"/>
+        <Caret Line="818" Column="34" TopLine="782"/>
       </Position6>
       <Position7>
         <Filename Value="main.pas"/>
-        <Caret Line="1042" TopLine="1026"/>
+        <Caret Line="66" Column="38" TopLine="57"/>
       </Position7>
       <Position8>
         <Filename Value="main.pas"/>
-        <Caret Line="1043" TopLine="1027"/>
+        <Caret Line="792" Column="39" TopLine="782"/>
       </Position8>
       <Position9>
         <Filename Value="main.pas"/>
-        <Caret Line="1044" TopLine="1028"/>
+        <Caret Line="156" Column="84" TopLine="149"/>
       </Position9>
       <Position10>
         <Filename Value="main.pas"/>
-        <Caret Line="1047" TopLine="1031"/>
+        <Caret Line="6" Column="24"/>
       </Position10>
       <Position11>
         <Filename Value="main.pas"/>
-        <Caret Line="1054" TopLine="1044"/>
+        <Caret Line="92" Column="23" TopLine="76"/>
       </Position11>
       <Position12>
         <Filename Value="main.pas"/>
-        <Caret Line="1061" TopLine="1045"/>
+        <Caret Line="155" Column="56" TopLine="139"/>
       </Position12>
       <Position13>
         <Filename Value="main.pas"/>
-        <Caret Line="1068" TopLine="1058"/>
+        <Caret Line="156" Column="84" TopLine="140"/>
       </Position13>
       <Position14>
         <Filename Value="main.pas"/>
-        <Caret Line="1075" TopLine="1059"/>
+        <Caret Line="157" Column="88" TopLine="141"/>
       </Position14>
       <Position15>
         <Filename Value="main.pas"/>
-        <Caret Line="1082" TopLine="1072"/>
+        <Caret Line="87" Column="13" TopLine="80"/>
       </Position15>
       <Position16>
         <Filename Value="main.pas"/>
-        <Caret Line="1089" TopLine="1073"/>
+        <Caret Line="140" Column="16" TopLine="133"/>
       </Position16>
       <Position17>
         <Filename Value="main.pas"/>
-        <Caret Line="1096" TopLine="1086"/>
+        <Caret Line="141" Column="16" TopLine="133"/>
       </Position17>
       <Position18>
         <Filename Value="main.pas"/>
-        <Caret Line="1103" TopLine="1087"/>
+        <Caret Line="794" Column="39" TopLine="782"/>
       </Position18>
       <Position19>
         <Filename Value="main.pas"/>
-        <Caret Line="1110" TopLine="1100"/>
+        <Caret Line="1219" Column="20" TopLine="1209"/>
       </Position19>
       <Position20>
         <Filename Value="main.pas"/>
-        <Caret Line="1117" TopLine="1101"/>
+        <Caret Line="87" Column="13" TopLine="78"/>
       </Position20>
       <Position21>
         <Filename Value="main.pas"/>
-        <Caret Line="1125" TopLine="1114"/>
+        <Caret Line="140" Column="16" TopLine="124"/>
       </Position21>
       <Position22>
         <Filename Value="main.pas"/>
-        <Caret Line="1126" TopLine="1114"/>
+        <Caret Line="141" Column="16" TopLine="125"/>
       </Position22>
       <Position23>
         <Filename Value="main.pas"/>
-        <Caret Line="1033" TopLine="1022"/>
+        <Caret Line="159" Column="16" TopLine="143"/>
       </Position23>
       <Position24>
         <Filename Value="main.pas"/>
-        <Caret Line="1034" TopLine="1022"/>
+        <Caret Line="295" Column="33" TopLine="291"/>
       </Position24>
       <Position25>
         <Filename Value="main.pas"/>
-        <Caret Line="1035" TopLine="1022"/>
+        <Caret Line="1219" Column="20" TopLine="1209"/>
       </Position25>
       <Position26>
         <Filename Value="main.pas"/>
-        <Caret Line="1037" TopLine="1022"/>
+        <Caret Line="87" Column="13" TopLine="78"/>
       </Position26>
       <Position27>
         <Filename Value="main.pas"/>
-        <Caret Line="738" TopLine="729"/>
+        <Caret Line="1226" TopLine="1216"/>
       </Position27>
       <Position28>
         <Filename Value="main.pas"/>
-        <Caret Line="1127" Column="58" TopLine="989"/>
+        <Caret Line="1113" Column="41" TopLine="1107"/>
       </Position28>
       <Position29>
         <Filename Value="main.pas"/>
-        <Caret Line="724" Column="37" TopLine="712"/>
+        <Caret Line="66" Column="61" TopLine="57"/>
       </Position29>
       <Position30>
         <Filename Value="main.pas"/>
-        <Caret Line="1124" Column="45" TopLine="1117"/>
+        <Caret Line="794" Column="39" TopLine="787"/>
       </Position30>
     </JumpHistory>
     <RunParams>

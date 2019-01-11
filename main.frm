@@ -1,10 +1,10 @@
 object fMain: TfMain
-  Left = 365
-  Height = 423
+  Left = 362
+  Height = 493
   Top = 185
   Width = 981
-  Caption = 'Sincronizador de datos V1.1'
-  ClientHeight = 423
+  Caption = 'Sincronizador de datos V1.2'
+  ClientHeight = 493
   ClientWidth = 981
   OnActivate = FormActivate
   OnCloseQuery = FormCloseQuery
@@ -29,7 +29,7 @@ object fMain: TfMain
   object oBtn_Pausa: TBitBtn
     Left = 8
     Height = 84
-    Top = 336
+    Top = 407
     Width = 127
     Caption = 'Pausa'
     Glyph.Data = {
@@ -330,7 +330,7 @@ object fMain: TfMain
   object oBtn_Play: TBitBtn
     Left = 144
     Height = 84
-    Top = 336
+    Top = 407
     Width = 130
     Caption = 'Play'
     Glyph.Data = {
@@ -631,7 +631,7 @@ object fMain: TfMain
   object oBtn_Exit: TBitBtn
     Left = 848
     Height = 84
-    Top = 336
+    Top = 407
     Width = 127
     Caption = 'Salir'
     Glyph.Data = {
@@ -1569,7 +1569,7 @@ object fMain: TfMain
   end
   inline oLog: TSynEdit
     Left = 8
-    Height = 262
+    Height = 336
     Top = 64
     Width = 968
     Font.Height = -13

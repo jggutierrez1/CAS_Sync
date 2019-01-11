@@ -10,6 +10,12 @@ uses
   Dialogs, ExtCtrls, DBCtrls, StdCtrls, Buttons, Menus, inifiles, dbf, DB;
 
 type
+  Tables_Ctrl = object
+    Ignore_Table: boolean;
+    Ignore_Field: boolean;
+  end;
+
+type
 
   { TfMain }
 
@@ -57,7 +63,7 @@ type
     procedure LogFile(Info: string);
     function IIF(Condition: boolean; TrueResult, FalseResult: variant): variant;
     procedure Dataset_To_DBF_Values_Send(iLimitInserts: integer = 20);
-    procedure Dataset_To_Mysql_Create(cTblName: string);
+    procedure Dataset_To_Mysql_Create(iIndexTable: integer; cTblName: string);
     function Dest_query_selectgen_result(oConn: TZConnection; cSql_Cmd: string): string;
     function Dest_DatabaseExists(DBName: string): boolean;
     function Dest_TableExists(DBName: string; TableName: string): boolean;
@@ -66,6 +72,7 @@ type
     function Dest_Fields_Counts(Full_DB_Table_Name: string): integer;
     procedure Dest_Add_Ctrl_Field(cTableName: string);
     function Dest_query_updateg(cSql_Cmd: string; bShow_QryMessage: boolean = False): boolean;
+    procedure Dest_Connections(bFlag: boolean; cDatabase: string);
 
     function Orig_TableExists(cTableName: string): boolean;
     function Orig_FieldExists(oTable: TDbf; cField: string): boolean;
@@ -82,13 +89,16 @@ type
     cDBF_NAMED: string;
     cDBF_CTRL_DB, cLIMITSELO: string;
     cDatabaseD, cPROTOCOLD, cHOSTNAMED, cUSERNAMED, cPASSWORDD, cLIMITSELD: string;
+    cDBF_CTRL_FLD_STOP, cDBF_CTRL_FLD_WAIT: string;
     iPORT_NUMD: integer;
     iDelayTab: integer;
     iTimerDoi: integer;
     iMasterIdx: integer;
     bCheck_CTRL_DB: boolean;
+    bCheck_MySqlDb: boolean;
     cMessE_CTRL_DB: string;
     cMessaje_Mant: string;
+    oTables_Ctrl: array of Tables_Ctrl;
   public
 
   end;
@@ -108,6 +118,7 @@ var
   cPath, cFile: string;
 begin
   self.bCheck_CTRL_DB := True;
+  self.bCheck_MySqlDb := True;
   self.cMessE_CTRL_DB := '';
   self.cMessaje_Mant := '';
 
@@ -140,8 +151,10 @@ begin
   self.oSL_Orig.CommaText := oINI.ReadString(cSrv_Orig, 'TABLES_NAMES', '');
   self.cDBF_PATHO := oINI.ReadString(cSrv_Orig, 'DBF_PATH', '');
   self.cLIMITSELO := oIni.ReadString(cSrv_Orig, 'LIMITSEL', '25');
-  self.cDBF_CTRL_DB := oIni.ReadString(cSrv_Orig, 'STOP_CTRL_DB', '');
 
+  self.cDBF_CTRL_DB := oIni.ReadString(cSrv_Orig, 'STOP_CTRL_DB', '');
+  self.cDBF_CTRL_FLD_STOP := oIni.ReadString(cSrv_Orig, 'STOP_CTRL_FLD_STOP', 'stop');
+  self.cDBF_CTRL_FLD_WAIT := oIni.ReadString(cSrv_Orig, 'STOP_CTRL_FLD_WAIT', 'eng_stoped');
 
   self.oMa_Dest.CommaText := oINI.ReadString(cSrv_Dest, 'MASTER_FIELD', '');
   self.oSL_Dest.CommaText := oINI.ReadString(cSrv_Dest, 'TABLES_NAMES', '');
@@ -156,6 +169,8 @@ begin
   oINI.Free;
   self.oTimer1.Interval := (iTimerDoi * 1000);
   self.oTimer1.Enabled := False;
+
+  SetLength(oTables_Ctrl, self.oSL_Orig.Count);
 end;
 
 procedure TfMain.FormShow(Sender: TObject);
@@ -180,6 +195,26 @@ begin
     self.oLog.Repaint;
   end;
 
+end;
+
+procedure TfMain.Dest_Connections(bFlag: boolean; cDatabase: string);
+begin
+  if (bFlag = False) then
+  begin
+    self.oConn_Dest.Connected := False;
+  end
+  else
+  begin
+    self.oConn_Dest.Connected := False;
+    self.oConn_Dest.Protocol := self.cPROTOCOLD;
+    self.oConn_Dest.HostName := self.cHOSTNAMED;
+    self.oConn_Dest.User := self.cUSERNAMED;
+    self.oConn_Dest.Password := self.cPASSWORDD;
+    self.oConn_Dest.Port := self.iPORT_NUMD;
+    self.oConn_Dest.Catalog := cDatabase;
+    self.oConn_Dest.Database := cDatabase;
+    self.oConn_Dest.Connected := True;
+  end;
 end;
 
 procedure TfMain.Start_Connections(iIndex: integer = 0);
@@ -276,8 +311,6 @@ begin
         bExit := True;
       end;
     end;
-
-
 
     if (bFindDbf = True) then
     begin
@@ -616,7 +649,29 @@ var
 begin
   cMessage := '';
   bSkip_Table := False;
-  //-------------------VERIFICA TABLA DE CONTROL DE CLICOS----------------------
+
+  //1.0-------------------------------------VERIFICA SI LA BASE DE DATOS DESTINO EXISTE-------------------------------------
+  if (self.bCheck_MySqlDb = True) then
+  begin
+    self.Dest_Connections(True, 'mysql');
+    if (self.Dest_DatabaseExists(self.cDatabaseD) = False) then
+    begin
+      cMessage := 'ERR-> BASE DE DATOS DESTINO [' + self.cSrv_Dest + '->`' + trim(self.cDatabaseD) + '`] NO EXISTE.';
+      self.oLog.Lines.Insert(0, cMessage);
+      self.oLog.Repaint;
+
+      cSql_Ln := 'CREATE DATABASE IF NOT EXISTS `' + trim(self.cDatabaseD) + '` /*!40100 COLLATE "utf8_general_ci" */;';
+      self.Dest_query_updateg(cSql_Ln);
+
+      self.oLog.Lines.Insert(0, cSql_Ln);
+      self.oLog.Repaint;
+    end;
+    self.Dest_Connections(False, '');
+    self.bCheck_MySqlDb := False;
+  end;
+  //----------------------------------------------------------------------------------------------------------------------
+
+  //2.0---------------------------------------VERIFICA TABLA DE CONTROL DE CLICOS-----------------------------------------
   if (self.bCheck_CTRL_DB = True) then
   begin
     self.cMessE_CTRL_DB := '';
@@ -627,25 +682,25 @@ begin
     end
     else
     begin
-      if ((self.Orig_FieldExists(self.oDbf_Ctr, 'stop') = False) or (self.Orig_FieldExists(self.oDbf_Ctr, 'eng_stoped') = False)) then
+      if ((self.Orig_FieldExists(self.oDbf_Ctr, self.cDBF_CTRL_FLD_STOP) = False) or
+        (self.Orig_FieldExists(self.oDbf_Ctr, self.cDBF_CTRL_FLD_WAIT) = False)) then
       begin
         self.bCheck_CTRL_DB := False;
         self.cMessE_CTRL_DB := self.cMessE_CTRL_DB + 'ERR-> TABLA DE CONTROL (' + self.cDBF_PATHO + '/' +
-          self.cDBF_CTRL_DB + '), LA ESTRUCTURA LE FANTAN LOS CAMPOS ("stop" ó "eng_stoped").';
+          self.cDBF_CTRL_DB + '), LA ESTRUCTURA LE FANTAN LOS CAMPOS ("' + self.cDBF_CTRL_FLD_STOP + '" ó "' + self.cDBF_CTRL_FLD_WAIT + '").';
       end;
     end;
   end;
-  //----------------------------------------------------------------------------
 
   if (trim(self.cMessE_CTRL_DB) = '') then
   begin
-    //-------------------VERIFICA ORDENES DEL LA TABLA DE CONTROL-----------------
-    if not self.oDbf_Ctr.FieldByName('stop').IsNull then
+    //2.1-------------------------------------VERIFICA ORDENES DEL LA TABLA DE CONTROL---------------------------------------
+    if not self.oDbf_Ctr.FieldByName(self.cDBF_CTRL_FLD_STOP).IsNull then
     begin
-      if (self.oDbf_Ctr.FieldByName('stop').AsInteger = 1) then
+      if (self.oDbf_Ctr.FieldByName(self.cDBF_CTRL_FLD_STOP).AsInteger = 1) then
       begin
         self.oDbf_Ctr.Edit;
-        self.oDbf_Ctr.FieldByName('eng_stoped').AsInteger := 1;
+        self.oDbf_Ctr.FieldByName(self.cDBF_CTRL_FLD_WAIT).AsInteger := 1;
         self.oDbf_Ctr.Post;
         if (self.cMessaje_Mant = '') then
         begin
@@ -664,6 +719,7 @@ begin
     self.oLog.Lines.Insert(0, self.cMessE_CTRL_DB);
     self.oLog.Repaint;
   end;
+  //-------------------------------------------------------------------------------------------------------------------------
 
   self.oTimer1.Enabled := False;
   if (self.oLog.Lines.Count > 100) then
@@ -679,26 +735,66 @@ begin
     begin
       bSkip_Table := False;
       self.iMasterIdx := I;
+
+      //------------------------------------------*ENVIO DE INFORMACION AL ESTINO*-----------------------------------------//
       self.Start_Connections(I);
-      //--------------*ENVIO DE INFORMACION AL ESTINO*-----------------//
-      //---------------------------------------------------------------//
 
-      iField1 := self.Orig_Fields_Counts(self.oDbf_Orig);
-
-      iField2 := self.Dest_Fields_Counts(self.oSL_Dest[I]);
-      iField2 := iField2 + self.iif(self.Dest_FieldExists('autoin', trim(self.cDatabaseD) + '.' + trim(self.oSL_Dest[I])) = True, -1, 0);
-
-      if (iField1 > iField2) then
-      begin
-        SELF.Dataset_To_Mysql_Create(trim(self.oSL_Dest[I]));
-      end;
-
+      //3.0---------------------------------------VERIFICA CAMPOS DE CONTROL EN ORIGEN-------------------------------------
       if (self.Orig_FieldExists(self.oDbf_Orig, 'flag_modif') = False) then
       begin
         cMessage := 'ERR-> TABLA ORIGEN [' + self.cDBF_PATHO + '\' + self.oSL_Orig[I] + '] NO CONTIENE CAMPO DE CONTROL ("flag_modif")';
         self.oLog.Lines.Insert(0, cMessage);
         self.oLog.Repaint;
         bSkip_Table := True;
+      end;
+
+      //3.0---------------------------------------VERIFICA TABLA DESTINO EXISTE -------------------------------------------
+      if (self.oTables_Ctrl[I].Ignore_Table = False) then
+      begin
+        if (self.Dest_TableExists(self.cDatabaseD, self.oSL_Dest[I]) = False) then
+        begin
+          cMessage := 'ERR-> TABLE DESTINO [' + self.cSrv_Dest + '->`' + trim(self.cDatabaseD) + '`.`' + self.oSL_Dest[I] + '] NO EXISTE.';
+          self.oLog.Lines.Insert(0, cMessage);
+          self.oLog.Repaint;
+
+          cSql_Ln := '';
+          cSql_Ln := cSql_Ln + 'CREATE TABLE IF NOT EXISTS `' + trim(self.cDatabaseD) + '`.`' + trim(self.oSL_Dest[I]) + '` ';
+          cSql_Ln := cSql_Ln + '( `autoin` BIGINT NOT NULL AUTO_INCREMENT, PRIMARY KEY (`autoin`) ) COLLATE="utf8_general_ci";';
+          self.Dest_query_updateg(cSql_Ln);
+
+          self.oLog.Lines.Insert(0, cSql_Ln);
+          self.oLog.Repaint;
+
+        end;
+        self.oTables_Ctrl[I].Ignore_Table := True;
+      end;
+
+      //4.0-------------------------------VERIFICA SI LOS CAMPOS DE LA TABLA DESTINO EXISTEN-------------------------------
+      if (self.oTables_Ctrl[I].Ignore_Field = False) then
+      begin
+        iField1 := self.Orig_Fields_Counts(self.oDbf_Orig);
+        iField2 := self.Dest_Fields_Counts(self.oSL_Dest[I]);
+
+        if (self.Dest_FieldExists('autoin', trim(self.cDatabaseD) + '.' + trim(self.oSL_Dest[I])) = False) then
+        begin
+          cSql_Ln := '';
+          cSql_Ln := cSql_Ln + 'ALTER  TABLE `' + trim(self.cDatabaseD) + '`.`' + trim(self.oSL_Dest[I]) + '` ';
+          cSql_Ln := cSql_Ln + 'ADD COLUMN `autoin` BIGINT(20) NOT NULL AUTO_INCREMENT FIRTS,';
+          cSql_Ln := cSql_Ln + 'ADD PRIMARY KEY (`autoin`);';
+          self.Dest_query_updateg(cSql_Ln);
+
+          self.oLog.Lines.Insert(0, cSql_Ln);
+          self.oLog.Repaint;
+        end;
+
+        iField2 := iField2 + self.iif(self.Dest_FieldExists('autoin', trim(self.cDatabaseD) + '.' + trim(self.oSL_Dest[I])) = True, -1, 0);
+
+        if (iField1 > iField2) then
+        begin
+          SELF.Dataset_To_Mysql_Create(self.iMasterIdx, trim(self.oSL_Dest[I]));
+        end;
+
+        self.oTables_Ctrl[I].Ignore_Field := True;
       end;
 
       if (self.Dest_FieldExists('flag_modif', trim(self.cDatabaseD) + '.' + trim(self.oSL_Dest[I])) = False) then
@@ -717,28 +813,18 @@ begin
         bSkip_Table := False;
       end;
 
-      //--------------*COMPARA LOS CAMPOS PARA VER SI SON DIFERENTES---//
-
-      if (iField1 > iField2) then
+      //5.0---------------------VERIFICA SI LA TABLA DE DESTINO TIENE MAS CAMPOS QUE EL ORIGEN-----------------------------
+      iField1 := self.Orig_Fields_Counts(self.oDbf_Orig);
+      iField2 := self.Dest_Fields_Counts(self.oSL_Dest[I]);
+      iField2 := iField2 + self.iif(self.Dest_FieldExists('autoin', trim(self.cDatabaseD) + '.' + trim(self.oSL_Dest[I])) = True, -1, 0);
+      if (iField1 < iField2) then
       begin
-        cMessage := 'ERR-> TABLA [' + self.cDBF_PATHO + '\' + self.oSL_Orig[I] + '] TIENE MAS CAMPOS (' +
+        cMessage := 'ERR-> TABLA [' + self.cDBF_PATHO + '\' + self.oSL_Orig[I] + '] TIENE MENOS CAMPOS (' +
           trim(IntToStr(iField1)) + ') QUE [' + self.cHOSTNAMED + '>' + self.cDatabaseD + '.' + self.oSL_Dest[I] +
           '] (' + trim(IntToStr(iField2)) + ')';
         self.oLog.Lines.Insert(0, cMessage);
         self.oLog.Repaint;
         bSkip_Table := True;
-      end
-      else
-      begin
-        if (iField1 < iField2) then
-        begin
-          cMessage := 'ERR-> TABLA [' + self.cDBF_PATHO + '\' + self.oSL_Orig[I] + '] TIENE MENOS CAMPOS (' +
-            trim(IntToStr(iField1)) + ') QUE [' + self.cHOSTNAMED + '>' + self.cDatabaseD + '.' + self.oSL_Dest[I] +
-            '] (' + trim(IntToStr(iField2)) + ')';
-          self.oLog.Lines.Insert(0, cMessage);
-          self.oLog.Repaint;
-          bSkip_Table := True;
-        end;
       end;
       //---------------------------------------------------------------//
 
@@ -1024,7 +1110,7 @@ begin
   self.oLog.Repaint;
 end;
 
-procedure TfMain.Dataset_To_Mysql_Create(cTblName: string);
+procedure TfMain.Dataset_To_Mysql_Create(iIndexTable: integer; cTblName: string);
 var
   iIdx, iFields_Cnt: integer;
   iType: TFieldType;
@@ -1129,6 +1215,18 @@ begin
       cSql_Ln := 'ALTER TABLE `' + trim(self.cDatabaseD) + '`.`' + trim(cTblName) + '` ADD COLUMN `' + LOWERCASE(cColumnName) +
         '` ' + cType + ' ' + cPres + ' NULL DEFAULT ' + cDefa + ';';
       self.Dest_query_updateg(cSql_Ln);
+
+      if (Lowercase(oMa_Dest[iIndexTable]) = Lowercase(cColumnName)) then
+      begin
+        cSql_Ln := 'ALTER TABLE `' + trim(self.cDatabaseD) + '`.`' + trim(cTblName) + '` ADD INDEX `' + cColumnName + '` (`' + cColumnName + '`);';
+        self.Dest_query_updateg(cSql_Ln);
+      end;
+
+      if (Lowercase(cColumnName) = 'flag_modif') then
+      begin
+        cSql_Ln := 'ALTER TABLE `' + trim(self.cDatabaseD) + '`.`' + trim(cTblName) + '` ADD INDEX `' + cColumnName + '` (`' + cColumnName + '`);';
+        self.Dest_query_updateg(cSql_Ln);
+      end;
 
       self.oLog.Lines.Insert(0, cSql_Ln);
       self.oLog.Repaint;
