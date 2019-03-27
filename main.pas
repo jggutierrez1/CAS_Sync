@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, FileUtil, SynHighlighterTeX, SynEdit, SynHighlighterSQL,
   ZConnection, ZSqlProcessor, ZDataset, ZSqlUpdate, Forms, Controls, Graphics,
   Dialogs, ExtCtrls, DBCtrls, StdCtrls, Buttons, Menus, inifiles, dbf, DB,
-  resource, versiontypes, versionresource;
+  resource, versiontypes, versionresource, DateUtils;
 
 type
   Tables_Ctrl = object
@@ -21,6 +21,7 @@ type
   { TfMain }
 
   TfMain = class(TForm)
+    olTiempo_Mant: TLabel;
     oCmd_Orig: TZSQLProcessor;
     oDbf_Ctr: TDbf;
     oDS_Orig: TDataSource;
@@ -92,6 +93,7 @@ type
     cDBF_CTRL_DB, cLIMITSELO: string;
     cDatabaseD, cPROTOCOLD, cHOSTNAMED, cUSERNAMED, cPASSWORDD, cLIMITSELD: string;
     cDBF_CTRL_FLD_STOP, cDBF_CTRL_FLD_WAIT: string;
+    iDBF_CTRL_MIN_RELE: integer;
     iPORT_NUMD: integer;
     iDelayTab: integer;
     iTimerDoi: integer;
@@ -101,6 +103,7 @@ type
     cMessE_CTRL_DB: string;
     cMessaje_Mant: string;
     oTables_Ctrl: array of Tables_Ctrl;
+    dFechaMantIni, dFechaMantFin: Tdatetime;
   public
 
   end;
@@ -148,6 +151,8 @@ begin
   self.iAtoplay := oINI.ReadInteger('GENERAL', 'AUTOPLAY', 1);
   self.iDelayTab := oINI.ReadInteger('GENERAL', 'DELAY_TABL', 0);
   self.iTimerDoi := oINI.ReadInteger('GENERAL', 'TIMER_DOIT', 3);
+  self.iTimerDoi := oINI.ReadInteger('GENERAL', 'MINUTES_AUTO_RELEASE', 1);
+
 
   self.oMa_Orig.CommaText := oINI.ReadString(cSrv_Orig, 'MASTER_FIELD', '');
   self.oSL_Orig.CommaText := oINI.ReadString(cSrv_Orig, 'TABLES_NAMES', '');
@@ -157,6 +162,7 @@ begin
   self.cDBF_CTRL_DB := oIni.ReadString(cSrv_Orig, 'STOP_CTRL_DB', '');
   self.cDBF_CTRL_FLD_STOP := oIni.ReadString(cSrv_Orig, 'STOP_CTRL_FLD_STOP', 'stop');
   self.cDBF_CTRL_FLD_WAIT := oIni.ReadString(cSrv_Orig, 'STOP_CTRL_FLD_WAIT', 'eng_stoped');
+  self.iDBF_CTRL_MIN_RELE := oIni.ReadInteger(cSrv_Orig, 'STOP_CTRL_MIN_AUTORELEASE', 1);
 
   self.oMa_Dest.CommaText := oINI.ReadString(cSrv_Dest, 'MASTER_FIELD', '');
   self.oSL_Dest.CommaText := oINI.ReadString(cSrv_Dest, 'TABLES_NAMES', '');
@@ -649,6 +655,8 @@ var
   cMessage: string;
   iField1, iField2: integer;
   bSkip_Table: boolean;
+  cTiempoMant: string;
+  iDias, iHoras, iMinutos, iSegundos: integer;
 begin
   cMessage := '';
   bSkip_Table := False;
@@ -703,14 +711,44 @@ begin
     begin
       if (self.oDbf_Ctr.FieldByName(self.cDBF_CTRL_FLD_STOP).AsInteger = 1) then
       begin
-        self.oDbf_Ctr.Edit;
-        self.oDbf_Ctr.FieldByName(self.cDBF_CTRL_FLD_WAIT).AsInteger := 1;
-        self.oDbf_Ctr.Post;
+
+        if (self.oDbf_Ctr.FieldByName(self.cDBF_CTRL_FLD_WAIT).AsInteger = 0) then
+        begin
+          self.oDbf_Ctr.Edit;
+          self.oDbf_Ctr.FieldByName(self.cDBF_CTRL_FLD_WAIT).AsInteger := 1;
+          self.oDbf_Ctr.Post;
+        end;
         if (self.cMessaje_Mant = '') then
         begin
           self.cMessaje_Mant := 'SE RECIBIO UNA ORDEN DE SUSPENCION POR MANTENIMIENTO!!!';
           self.oLog.Lines.Insert(0, self.cMessaje_Mant);
           self.oLog.Repaint;
+
+          dFechaMantIni := now();
+          dFechaMantFin := now() + (60 * 5);
+        end;
+
+        iDias := DaysBetween(NOW(), dFechaMantIni);
+        iHoras := HoursBetween(NOW(), dFechaMantIni);
+        iMinutos := MinutesBetween(NOW(), dFechaMantIni);
+        iSegundos := SecondsBetween(NOW(), dFechaMantIni);
+
+        cTiempoMant := '';
+        cTiempoMant := cTiempoMant + 'Inicio sesión: ' + DateTimeToStr(dFechaMantIni) + #13;
+        cTiempoMant := cTiempoMant + 'Tiempo transcurrido' + #13;
+        cTiempoMant := cTiempoMant + 'Dias     : ' + IntToStr(iDias) + #13;
+        cTiempoMant := cTiempoMant + 'Horas    : ' + IntToStr(iHoras) + #13;
+        cTiempoMant := cTiempoMant + 'Minutos  : ' + IntToStr(iMinutos) + #13;
+        cTiempoMant := cTiempoMant + 'Segundos : ' + IntToStr(iSegundos);
+        olTiempo_Mant.Caption := cTiempoMant;
+        olTiempo_Mant.REPAINT;
+
+        if (iMinutos >= self.iDBF_CTRL_MIN_RELE) then
+        begin
+          self.oDbf_Ctr.Edit;
+          self.oDbf_Ctr.FieldByName(self.cDBF_CTRL_FLD_WAIT).AsInteger := 0;
+          self.oDbf_Ctr.FieldByName(self.cDBF_CTRL_FLD_STOP).AsInteger := 0;
+          self.oDbf_Ctr.Post;
         end;
         exit;
       end
@@ -723,6 +761,9 @@ begin
     self.oLog.Lines.Insert(0, self.cMessE_CTRL_DB);
     self.oLog.Repaint;
   end;
+  olTiempo_Mant.Caption := '';
+  olTiempo_Mant.REPAINT;
+
   //-------------------------------------------------------------------------------------------------------------------------
 
   self.oTimer1.Enabled := False;
@@ -1270,7 +1311,7 @@ begin
       try
         vr.SetCustomRawDataStream(Stream);
         fi := vr.FixedInfo;
-        Result := 'Versión: ' + IntToStr(fi.FileVersion[0]) + '.' + IntToStr(fi.FileVersion[1]) +' build ' + IntToStr(fi.FileVersion[3]);
+        Result := 'Versión: ' + IntToStr(fi.FileVersion[0]) + '.' + IntToStr(fi.FileVersion[1]) + ' build ' + IntToStr(fi.FileVersion[3]);
         vr.SetCustomRawDataStream(nil)
       finally
         vr.Free

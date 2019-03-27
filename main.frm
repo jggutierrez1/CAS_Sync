@@ -1,5 +1,5 @@
 object fMain: TfMain
-  Left = 260
+  Left = 357
   Height = 493
   Top = 208
   Width = 981
@@ -2067,6 +2067,17 @@ object fMain: TfMain
         MouseActionsCollapsed = <>
       end
     end
+  end
+  object olTiempo_Mant: TLabel
+    Left = 295
+    Height = 64
+    Top = 416
+    Width = 537
+    AutoSize = False
+    Caption = 'HOLA MUNDO'
+    Font.Height = -8
+    ParentColor = False
+    ParentFont = False
   end
   object oTimer1: TTimer
     Enabled = False

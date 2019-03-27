@@ -1,4 +1,4 @@
-program Cas_SyncV1;
+program Cas_Sync;
 
 {$mode objfpc}{$H+}
 
@@ -13,6 +13,7 @@ uses
 {$R *.res}
 
 begin
+  Application.Title:='Cas_Sync';
   RequireDerivedFormResource:=True;
   Application.Initialize;
   Application.CreateForm(TfMain, fMain);

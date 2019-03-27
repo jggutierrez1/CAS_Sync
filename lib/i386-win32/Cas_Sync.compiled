@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Compiler Value="C:\codetyphon\fpc\fpc32\bin\i386-win32\fpc.exe" Date="1292151973"/>
+  <Params Value=" -MObjFPC -Scghi -O1 -g -gl -WG -l -vewnhibq -FiC:\Shared\Desarrollo\CAS_Sync\lib\i386-win32 -FuC:\codetyphon\typhon\components\pl_ZeosDBO\lib\i386-win32\win32 -FuC:\codetyphon\typhon\components\lz_tdbf\lib\i386-win32\win32 -FuC:\codetyphon\typhon\components\BaseIdeintf\units\i386-win32\win32 -FuC:\codetyphon\typhon\components\BaseSynedit\units\i386-win32\win32 -FuC:\codetyphon\typhon\components\BaseControls\lib\i386-win32\win32 -FuC:\codetyphon\typhon\lcl\units\i386-win32\win32 -FuC:\codetyphon\typhon\lcl\units\i386-win32 -FuC:\codetyphon\typhon\components\pl_Win_OleDB\lib\i386-win32\win32 -FuC:\codetyphon\typhon\components\BaseUtils\lib\i386-win32 -FuC:\codetyphon\typhon\packager\units\i386-win32 -FuC:\Shared\Desarrollo\CAS_Sync\ -FUC:\Shared\Desarrollo\CAS_Sync\lib\i386-win32\ -FEC:\Shared\Desarrollo\CAS_Sync\ -oC:\Shared\Desarrollo\CAS_Sync\Cas_Sync.exe -dLCL -dLCLwin32 Cas_Sync.ppr"/>
+</CONFIG>
