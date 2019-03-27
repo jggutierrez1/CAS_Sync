@@ -1,7 +1,7 @@
 object fMain: TfMain
-  Left = 362
+  Left = 260
   Height = 493
-  Top = 185
+  Top = 208
   Width = 981
   Caption = 'Sincronizador de datos V1.2'
   ClientHeight = 493

@@ -7,7 +7,8 @@ interface
 uses
   Classes, SysUtils, FileUtil, SynHighlighterTeX, SynEdit, SynHighlighterSQL,
   ZConnection, ZSqlProcessor, ZDataset, ZSqlUpdate, Forms, Controls, Graphics,
-  Dialogs, ExtCtrls, DBCtrls, StdCtrls, Buttons, Menus, inifiles, dbf, DB;
+  Dialogs, ExtCtrls, DBCtrls, StdCtrls, Buttons, Menus, inifiles, dbf, DB,
+  resource, versiontypes, versionresource;
 
 type
   Tables_Ctrl = object
@@ -77,6 +78,7 @@ type
     function Orig_TableExists(cTableName: string): boolean;
     function Orig_FieldExists(oTable: TDbf; cField: string): boolean;
     function Orig_Fields_Counts(oTable: TDbf): integer;
+    function resourceVersionInfo: string;
   private
     oINI: TINIFile;
     cSrv_Orig, cSrv_Dest: string;
@@ -175,6 +177,7 @@ end;
 
 procedure TfMain.FormShow(Sender: TObject);
 begin
+  self.Caption := 'Sincronizador de datos ' + self.resourceVersionInfo();
   self.oLog.Lines.Clear;
 
   self.oDbf_Ctr.Close;
@@ -672,6 +675,7 @@ begin
   //----------------------------------------------------------------------------------------------------------------------
 
   //2.0---------------------------------------VERIFICA TABLA DE CONTROL DE CLICOS-----------------------------------------
+  self.oDbf_Ctr.Refresh;
   if (self.bCheck_CTRL_DB = True) then
   begin
     self.cMessE_CTRL_DB := '';
@@ -779,7 +783,7 @@ begin
         begin
           cSql_Ln := '';
           cSql_Ln := cSql_Ln + 'ALTER  TABLE `' + trim(self.cDatabaseD) + '`.`' + trim(self.oSL_Dest[I]) + '` ';
-          cSql_Ln := cSql_Ln + 'ADD COLUMN `autoin` BIGINT(20) NOT NULL AUTO_INCREMENT FIRTS,';
+          cSql_Ln := cSql_Ln + 'ADD COLUMN `autoin` BIGINT(20) NOT NULL AUTO_INCREMENT FIRST,';
           cSql_Ln := cSql_Ln + 'ADD PRIMARY KEY (`autoin`);';
           self.Dest_query_updateg(cSql_Ln);
 
@@ -863,7 +867,9 @@ begin
         //---------------------------------------------------------------//
         SELF.Dataset_To_DBF_Values_Send(20);
         //SELF.do_process_to_dest;
-      end;
+      end
+      else
+        self.oDbf_Orig.Close;
     end;
   end;
   self.oTimer1.Enabled := True;
@@ -1117,7 +1123,9 @@ var
   iSize: integer;
   cColumnName, cSql_Ln: string;
   cType, cPres, cDefa: string;
+  cField_Ant: string;
 begin
+  cField_Ant := '';
   iFields_Cnt := self.oDbf_Orig.FieldCount;
   for iIdx := 0 to (iFields_Cnt - 1) do
   begin
@@ -1213,7 +1221,7 @@ begin
       end;
 
       cSql_Ln := 'ALTER TABLE `' + trim(self.cDatabaseD) + '`.`' + trim(cTblName) + '` ADD COLUMN `' + LOWERCASE(cColumnName) +
-        '` ' + cType + ' ' + cPres + ' NULL DEFAULT ' + cDefa + ';';
+        '` ' + cType + ' ' + cPres + ' NULL DEFAULT ' + cDefa + ' ' + iif(cField_Ant <> '', 'AFTER ' + cField_Ant, '') + ';';
       self.Dest_query_updateg(cSql_Ln);
 
       if (Lowercase(oMa_Dest[iIndexTable]) = Lowercase(cColumnName)) then
@@ -1232,6 +1240,45 @@ begin
       self.oLog.Repaint;
 
     end;
+    cField_Ant := cColumnName;
+  end;
+
+end;
+
+function TfMain.resourceVersionInfo: string;
+
+  (* Unlike most of AboutText (below), this takes significant activity at run-    *)
+  (* time to extract version/release/build numbers from resource information      *)
+  (* appended to the binary.                                                      *)
+
+var
+  Stream: TResourceStream;
+  vr: TVersionResource;
+  fi: TVersionFixedInfo;
+
+begin
+  Result := '';
+  try
+
+    (* This raises an exception if version info has not been incorporated into the  *)
+    (* binary (Lazarus Project -> Project Options -> Version Info -> Version        *)
+    (* numbering).                                                                  *)
+
+    Stream := TResourceStream.CreateFromID(HINSTANCE, 1, PChar(RT_VERSION));
+    try
+      vr := TVersionResource.Create;
+      try
+        vr.SetCustomRawDataStream(Stream);
+        fi := vr.FixedInfo;
+        Result := 'Versión: ' + IntToStr(fi.FileVersion[0]) + '.' + IntToStr(fi.FileVersion[1]) +' build ' + IntToStr(fi.FileVersion[3]);
+        vr.SetCustomRawDataStream(nil)
+      finally
+        vr.Free
+      end
+    finally
+      Stream.Free
+    end
+  except
   end;
 
 end;
